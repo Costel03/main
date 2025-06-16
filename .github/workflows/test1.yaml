@@ -1,0 +1,21 @@
+name: Deploy Splunk App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Splunk
+    runs-on: self-hosted
+
+    steps:
+    - name: Step 1 - Mesaj personalizat pe branch
+      run: |
+        echo "Branch: ${{ github.ref_name }}"
+        if [ "${{ github.ref_name }}" = "master" ]; then
+          echo "Salut Costel"
+        elif [ "${{ github.ref_name }}" = "dev" ]; then
+          echo "Salut Adrian"
+        else
+          echo "Salut dintr-un alt branch: ${{ github.ref_name }}"
+        fi
