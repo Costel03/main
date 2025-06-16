@@ -2,9 +2,6 @@ name: Deploy Splunk App
 
 on:
   workflow_dispatch:
-  # pull_request:
-  #   branches:
-  #     - dev
 
 jobs:
   deploy:
@@ -12,35 +9,14 @@ jobs:
     runs-on: self-hosted
 
     steps:
-    - name: Step 1 - Create workdir if needed
-      run: mkdir -p /opt/splunk/git_repo
-
-    - name: Step 2 - Clone the repository
+    - name: Step 1 - Mesaj personalizat pe branch
       run: |
-        cd /opt/splunk/git_repo
-        echo "Using branch: ${{ github.ref_name }}"
-        if [ ! -d "splunk_app_iqpress" ]; then
-          git clone git@atc-github.iqpress:iQPress/splunk_app_iqpress.git
-          cd splunk_app_iqpress
-          git checkout ${{ github.ref_name }}
-        else
-          cd splunk_app_iqpress
-          git checkout ${{ github.ref_name }}
-          git pull origin ${{ github.ref_name }}
-        fi
-
-    - name: Step 3 - Branch-specific logic
-      run: |
-        echo "Branch detected: ${{ github.ref_name }}"
+        echo "Branch: ${{ github.ref_name }}"
 
         if [ "${{ github.ref_name }}" = "master" ]; then
-          echo "⚙️  Production deployment started..."
-          # aici pui comenzile pentru productie
+          echo "Salut Costel"
         elif [ "${{ github.ref_name }}" = "dev" ]; then
-          echo "🧪 Running in development mode..."
-          # aici pui comenzile pentru dev
+          echo "Salut Adrian"
         else
-          echo "ℹ️  No specific steps defined for branch '${{ github.ref_name }}'"
+          echo "Salut dintr-un alt branch: ${{ github.ref_name }}"
         fi
-
-  
