@@ -1,0 +1,76 @@
+name: Deploy Splunk App
+ 
+on:
+  workflow_dispatch:
+    # pull_request:
+    #   branches:
+    #     - dev  
+ 
+jobs:
+  deploy:
+    name: Deploy to Splunk
+    runs-on: self-hosted
+   
+ 
+    steps:
+    - name: Step 1 - Clone the repository
+      run: |
+        cd /opt/splunk/git_repo
+        echo "Using branch: ${{ GITHUB_REF }}"
+        if [ ! -d "splunk_app_iqpress" ]; then
+          git clone git@atc-github.iqpress:iQPress/splunk_app_iqpress.git
+          git checkout ${{ GITHUB_REF }}
+        else
+          cd splunk_app_iqpress
+          git checkout ${{ GITHUB_REF }}
+          git pull origin ${{ GITHUB_REF }}
+        fi
+ 
+    - name: Step 2 - Backup existing app
+      run: |
+        cp -r /opt/splunk/etc/apps/iqpress /tmp/iqpress_backup_$(date +%F_%T)
+ 
+    - name: Step 3 - Replace old app with new version
+      run: |
+        rm -rf /opt/splunk/etc/apps/iqpress
+        cp -r /opt/splunk/git_repo/splunk_app_iqpress/iqpress /opt/splunk/etc/apps/
+        chmod -R 755 /opt/splunk/etc/apps/iqpress
+ 
+    - name: Step 4 - Restart Splunk and wait for readiness
+      run: |
+        echo "Restarting Splunk on $(hostname)... "
+        RUNNER_TRACKING_ID="" && (nohup /opt/splunk/bin/splunk restart )
+ 
+        echo "Waiting for Splunk to be ready..."
+        RETRIES=30
+        splunk_service_status () {
+          while ! nc -z localhost $1; do
+              sleep 2
+              RETRIES=$((RETRIES - 1))
+              echo "Retries: $RETRIES"
+              if [ $RETRIES -le 0 ]; then
+              echo "Timeout waiting for Splunk $2 port $1"
+              exit 1
+              fi
+          done
+          echo "Splunk $2 port is responding."
+        }
+       
+        splunk_service_status 8089 management
+        splunk_service_status 10443 ui
+       
+        splunk status
+ 
+        echo "Checking Splunk health..."
+        STATUS=$(curl -sk https://localhost:8089/services/server/info -u spladmin:${{ secrets.SPLUNK_PASSWORD }} | grep -i server)
+        if [[ -z "$STATUS" ]]; then
+            echo "Splunk health check failed"
+            exit 1
+        else
+            echo "Splunk is up and healthy."
+        fi
+ 
+    # - name: Step 5 - Bump Splunk version
+    #   run: |
+    #     curl -k https://splunk.local/en-US/_bump
+ 
