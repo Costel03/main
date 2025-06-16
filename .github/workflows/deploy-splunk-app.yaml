@@ -14,17 +14,19 @@ jobs:
  
     steps:
     - name: Step 1 - Clone the repository
-      run: |
-        cd /opt/splunk/git_repo
-        echo "Using branch: $GITHUB_REF"
-        if [ ! -d "splunk_app_iqpress" ]; then
-          git clone git@atc-github.iqpress:iQPress/splunk_app_iqpress.git
-          git checkout "$GITHUB_REF"
-        else
-          cd splunk_app_iqpress
-          git checkout "$GITHUB_REF"
-          git pull origin "$GITHUB_REF"
-        fi
+  run: |
+    cd /opt/splunk/git_repo
+    BRANCH_NAME=${GITHUB_REF#refs/heads/}
+    echo "Using branch: $BRANCH_NAME"
+    if [ ! -d "splunk_app_iqpress" ]; then
+      git clone git@atc-github.iqpress:iQPress/splunk_app_iqpress.git
+      cd splunk_app_iqpress
+      git checkout "$BRANCH_NAME"
+    else
+      cd splunk_app_iqpress
+      git checkout "$BRANCH_NAME"
+      git pull origin "$BRANCH_NAME"
+    fi
  
     - name: Step 2 - Backup existing app
       run: |
@@ -73,4 +75,3 @@ jobs:
     # - name: Step 5 - Bump Splunk version
     #   run: |
     #     curl -k https://splunk.local/en-US/_bump
- 
