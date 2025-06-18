@@ -1,0 +1,34 @@
+name: Deploy Splunk App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  approval:
+    name: Wait for Manual Approval
+    runs-on: ubuntu-latest
+    environment:
+      name: production  # Ensure this environment exists in repo settings and requires reviewers
+      url: https://example.com  # Optional: add a reference link
+
+    steps:
+    - name: Manual approval required before deployment
+      run: echo "Approval granted. Proceeding to deployment."
+
+  deploy:
+    name: Deploy to Splunk
+    runs-on: self-hosted
+    needs: approval
+
+    steps:
+    - name: Step 1 - Custom message per branch
+      run: |
+        echo "Branch: ${{ github.ref_name }}"
+
+        if [ "${{ github.ref_name }}" = "master" ]; then
+          echo "Hello Costel"
+        elif [ "${{ github.ref_name }}" = "dev" ]; then
+          echo "Hello Adrian"
+        else
+          echo "Hello from another branch: ${{ github.ref_name }}"
+        fi
